@@ -10,6 +10,8 @@ jobs:
   build-and-test:
     name: Build (MSBuild) and run tests
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout
@@ -43,61 +45,47 @@ jobs:
         name: test-results
         path: results.xml
 
-    - name: Update README badge with test results
-      if: always()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        Write-Host "Parsing results.xml and updating README badge"
-        $xml = [xml](Get-Content results.xml)
-        $tests = 0
-        $failures = 0
-        if ($xml.testsuites -ne $null) {
-          $tests = [int]$xml.testsuites.tests
-          $failures = [int]$xml.testsuites.failures
-        } else {
-          # Fallback: try testsuite element
-          $ts = $xml.testsuite
-          if ($ts -ne $null) {
-            $tests = [int]$ts.tests
-            $failures = [int]$ts.failures
+    - name: Update README badge (safe Node)
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const xmlPath = 'results.xml';
+          let xml = '';
+          if (fs.existsSync(xmlPath)) {
+            xml = fs.readFileSync(xmlPath, 'utf8');
           }
-        }
-        $passed = $tests - $failures
-        if ($tests -eq 0) { $color = 'lightgrey' } elseif ($passed -eq $tests) { $color = 'brightgreen' } elseif ($passed -gt 0) { $color = 'yellow' } else { $color = 'red' }
-        $message = "$passed/$tests"
-        $label = "tests"
-        $badge_url = "https://img.shields.io/badge/$label-$([System.Uri]::EscapeDataString($message))-$color"
-        $badge_md = "![tests]($badge_url)"
-        $readme = 'readme.md'
-        if (-Not (Test-Path $readme)) {
-          Write-Host "README not found at $readme, creating new file"
-          @"
-<!-- TEST_BADGE_START -->
-$badge_md
-<!-- TEST_BADGE_END -->
-
-# TDD Exercise: "Anagram Detector"
-"@ | Out-File -FilePath $readme -Encoding utf8
-        } else {
-          $text = Get-Content $readme -Raw -Encoding utf8
-          if ($text -match '<!-- TEST_BADGE_START -->[\s\S]*?<!-- TEST_BADGE_END -->') {
-            $new = [System.Text.RegularExpressions.Regex]::Replace($text, '<!-- TEST_BADGE_START -->[\s\S]*?<!-- TEST_BADGE_END -->', "<!-- TEST_BADGE_START -->`n$badge_md`n<!-- TEST_BADGE_END -->")
-            $new | Out-File -FilePath $readme -Encoding utf8
+          let tests = 0, failures = 0;
+          let m = xml.match(/<testsuites[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
+          if (!m) m = xml.match(/<testsuite[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
+          if (m) { tests = parseInt(m[1], 10); failures = parseInt(m[2], 10); }
+          const passed = tests - failures;
+          const color = (tests === 0) ? 'lightgrey' : (passed === tests) ? 'brightgreen' : (passed > 0) ? 'yellow' : 'red';
+          const message = `${passed}/${tests}`;
+          const badgeUrl = `https://img.shields.io/badge/tests-${encodeURIComponent(message)}-${color}`;
+          const badgeMd = `![tests](${badgeUrl})`;
+          const readmePath = 'readme.md';
+          let text = '';
+          if (fs.existsSync(readmePath)) text = fs.readFileSync(readmePath, 'utf8');
+          const start = '<!-- TEST_BADGE_START -->';
+          const end = '<!-- TEST_BADGE_END -->';
+          if (text.includes(start) && text.includes(end)) {
+            const replaced = text.replace(new RegExp(`${start}[\s\S]*?${end}`), `${start}\n${badgeMd}\n${end}`);
+            fs.writeFileSync(readmePath, replaced, 'utf8');
           } else {
-            # Prepend badge
-            $prefix = @"
-<!-- TEST_BADGE_START -->
-$badge_md
-<!-- TEST_BADGE_END -->
-
-"@
-            ($prefix + $text) | Out-File -FilePath $readme -Encoding utf8
+            const header = `${start}\n${badgeMd}\n${end}\n\n`;
+            const initial = text || '# TDD Exercise: "Anagram Detector"\n';
+            fs.writeFileSync(readmePath, header + initial, 'utf8');
           }
-        }
+
+    - name: Commit README badge
+      run: |
         git config user.email "actions@github.com"
         git config user.name "GitHub Actions"
-        git add $readme
-        git commit -m "ci: update test badge ($passed/$tests)" || Write-Host "No changes to commit"
+        git add readme.md
+        git commit -m "ci: update test badge" || echo "No changes to commit"
         git push
-      shell: pwsh
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # README badge update removed — keep CI focused on build and tests
