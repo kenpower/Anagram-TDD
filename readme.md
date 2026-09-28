@@ -37,18 +37,22 @@ Suggested TDD Steps
 
 4. Different single letters: ("A", "B") -> False
 
-5. Obvious anagrams: ("LISTEN", "SILENT") -> True
+5. Double letters, same word: ("AA", "AA") -> True
 
-6. Same letters, different word: ("RACE", "CARE") -> True
+6. Double letters, different words: ("AB", "BA") -> True
 
-7. Different words, same length: ("HELLO", "WORLD") -> False
+7. Same word: ("GAGA", "GAGA") -> True
 
-8. Same word: ("GAGA", "GAGA") -> True
+8. Same letters, different word: ("RACE", "CARE") -> True
 
-9. Same letters, different counts: ("AAB", "ABA") -> True; ("AAB", "ABB") -> False
+9. Different words, same length: ("HELLO", "WORLD") -> False
 
-10. Words are anagrams of substrings: ("GREEN", "GENE") -> False; ("CAP", "PACK") -> False
+10. Longer anagrams: ("LISTEN", "SILENT") -> True
 
-11. Ignore capitalisation: ("Rome", "More") -> True
+11. Same letters, different counts: ("AAB", "ABA") -> True; ("AAB", "ABB") -> False
 
-12. Ignore punctuation: ("Carlow?", "Coral, W!") -> True
+12. Words are anagrams of substrings: ("GREEN", "GENE") -> False; ("CAP", "PACK") -> False
+
+13. Ignore capitalisation: ("A", "a") -> True; ("Rome", "More") -> True, ("SETU", "Tues") -> True
+
+14. Ignore punctuation: ("Carlow?", "Coral, W!") -> True

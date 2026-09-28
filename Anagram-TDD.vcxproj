@@ -109,7 +109,6 @@
 	</ClCompile>
   </ItemGroup>
   <ItemGroup>
-	<ClCompile Include="tests\anagram_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
 	<None Include="packages.config" />
