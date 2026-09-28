@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8ef70754-e7f3-4a75-888c-64200e01e06a}</ProjectGuid>
+    <ProjectGuid>{41ccd32e-9070-4651-9c80-4f85c1590e2f}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <ConfigurationType>Application</ConfigurationType>
@@ -47,11 +47,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
     </Link>
-    <Debugging>
-      <!-- Ensure the debugger launches the actual built binary for this configuration -->
-      <LocalDebuggerCommand>$(TargetPath)</LocalDebuggerCommand>
-      <WorkingDirectory>$(OutDir)</WorkingDirectory>
-    </Debugging>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -67,11 +62,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
     </Link>
-    <Debugging>
-      <!-- Ensure the debugger launches the actual built binary for this configuration -->
-      <LocalDebuggerCommand>$(TargetPath)</LocalDebuggerCommand>
-      <WorkingDirectory>$(OutDir)</WorkingDirectory>
-    </Debugging>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -88,10 +78,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
-    <Debugging>
-      <LocalDebuggerCommand>$(TargetPath)</LocalDebuggerCommand>
-      <WorkingDirectory>$(OutDir)</WorkingDirectory>
-    </Debugging>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -108,16 +94,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
-    <Debugging>
-      <LocalDebuggerCommand>$(TargetPath)</LocalDebuggerCommand>
-      <WorkingDirectory>$(OutDir)</WorkingDirectory>
-    </Debugging>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="anagram\pch.h" />
-    <ClInclude Include="anagram_tests\pch.h" />
-    <ClInclude Include="include\anagram.h" />
-    <ClInclude Include="include\pch.h" />
+    <ClInclude Include="..\include\anagram.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -128,21 +107,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="tests\anagram_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="AnagramTDD.sln" />
-    <None Include="anagram\anagram.vcxproj" />
-    <None Include="anagram\anagram.vcxproj.filters" />
-    <None Include="anagram_tests\anagram_tests.vcxproj" />
-    <None Include="anagram_tests\anagram_tests.vcxproj.filters" />
     <None Include="packages.config" />
-    <None Include="readme.md" />
-    <None Include="VS-README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="CMakeLists.txt" />
-    <Text Include="tests\CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

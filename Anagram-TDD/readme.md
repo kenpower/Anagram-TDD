@@ -9,7 +9,8 @@ Write a function that determines if two words are anagrams of each other.
 An anagram is created by rearranging the letters of a word to produce a new word, using all original letters exactly once.
 
 
-- Only uppercase English letters (A-Z) will be given.
+- Letters may be provided in uppercase or lowercase. Implementations should
+  treat letters case-insensitively (for example, 'a' is equivalent to 'A').
 
 - Return True if the two words are anagrams, else False.
 

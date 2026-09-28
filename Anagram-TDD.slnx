@@ -1,7 +1,7 @@
 <Solution>
   <Configurations>
     <Platform Name="x64" />
-    <Platform Name="x86" />
+    <Platform Name="Win32" />
   </Configurations>
   <Project Path="Anagram-TDD/Anagram-TDD.vcxproj" />
 </Solution>
