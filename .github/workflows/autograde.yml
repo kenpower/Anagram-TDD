@@ -32,13 +32,28 @@ jobs:
 
     - name: Run tests and collect gtest XML
       continue-on-error: true
+      shell: pwsh
       run: |
-        if exist "Anagram-TDD\\x64\\Release\\Anagram-TDD.exe" (
-          "Anagram-TDD\\x64\\Release\\Anagram-TDD.exe" --gtest_output=xml:results.xml
-        ) else (
-          echo "Executable not found: Anagram-TDD\\x64\\Release\\Anagram-TDD.exe" & dir Anagram-TDD & dir Anagram-TDD\\x64 & exit 1
-        )
-      shell: cmd
+        $exe = Join-Path "$PWD" "x64\Release\Anagram-TDD.exe"
+        if (Test-Path $exe) {
+          Write-Host "Running tests: $exe"
+          & $exe --gtest_output=xml:results.xml
+          $rc = $LASTEXITCODE
+          Write-Host "Raw exit code: $rc"
+          # If gtest didn't produce XML, create a minimal results.xml using the exit code
+          if (-not (Test-Path "$PWD\results.xml")) {
+            $tests = 0; $fails = 0
+            if ($rc -ne 0) { $tests = 1; $fails = 1 };
+            $xml = "<testsuites tests=\"$tests\" failures=\"$fails\"></testsuites>"
+            Set-Content -Path "$PWD\results.xml" -Value $xml
+            Write-Host "Created fallback results.xml (tests=$tests failures=$fails)"
+          }
+        } else {
+          Write-Host "Executable not found: $exe"
+          $rc = 1
+        }
+        Write-Host "Test exit code: $rc"
+        Set-Content -Path test_exit_code.txt -Value $rc
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -57,14 +72,20 @@ jobs:
             xml = fs.readFileSync(xmlPath, 'utf8');
           }
           let tests = 0, failures = 0;
-          let m = xml.match(/<testsuites[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
-          if (!m) m = xml.match(/<testsuite[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
-          if (m) { tests = parseInt(m[1], 10); failures = parseInt(m[2], 10); }
+          if (xml) {
+            let m = xml.match(/<testsuites[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
+            if (!m) m = xml.match(/<testsuite[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
+            if (m) { tests = parseInt(m[1], 10); failures = parseInt(m[2], 10); }
+          } else if (fs.existsSync('test_exit_code.txt')) {
+            // No XML produced; fall back to exit code. If non-zero, mark as 1 failure on 1 test.
+            const rc = parseInt(fs.readFileSync('test_exit_code.txt','utf8').trim() || '0', 10);
+            if (rc !== 0) { tests = 1; failures = 1; } else { tests = 0; failures = 0; }
+          }
           const passed = tests - failures;
           const color = (tests === 0) ? 'lightgrey' : (passed === tests) ? 'brightgreen' : (passed > 0) ? 'yellow' : 'red';
           const message = `${passed}/${tests}`;
-          const badgeUrl = `https://img.shields.io/badge/tests-${encodeURIComponent(message)}-${color}`;
-          const badgeMd = `![tests](${badgeUrl})`;
+          const badgeUrl = `https://img.shields.io/badge/${encodeURIComponent('tests passed')}-${encodeURIComponent(message)}-${color}`;
+          const badgeMd = `![tests passed](${badgeUrl})`;
           const readmePath = 'readme.md';
           let text = '';
           if (fs.existsSync(readmePath)) text = fs.readFileSync(readmePath, 'utf8');
