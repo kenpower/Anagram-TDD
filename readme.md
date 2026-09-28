@@ -29,26 +29,26 @@ Examples:
 
 Suggested TDD Steps
 
-1. Both inputs empty: ("", "")  True
+1. Both inputs empty: ("", "") -> True
 
-2. One word empty, one not: ("", "A")  False
+2. One word empty, one not: ("", "A") -> False
 
-3. Same single letter: ("A", "A")  True
+3. Same single letter: ("A", "A") -> True
 
-4. Different single letters: ("A", "B")  False
+4. Different single letters: ("A", "B") -> False
 
-5. Obvious anagrams: ("LISTEN", "SILENT")  True
+5. Obvious anagrams: ("LISTEN", "SILENT") -> True
 
-6. Same letters, different word: ("RACE", "CARE")  True
+6. Same letters, different word: ("RACE", "CARE") -> True
 
-7. Different words, same length: ("HELLO", "WORLD")  False
+7. Different words, same length: ("HELLO", "WORLD") -> False
 
-8. Same word: ("GAGA", "GAGA")  True
+8. Same word: ("GAGA", "GAGA") -> True
 
-9. Same letters, different counts: ("AAB", "ABA")  True; ("AAB", "ABB")  False
+9. Same letters, different counts: ("AAB", "ABA") -> True; ("AAB", "ABB") -> False
 
-10. Words of different lengths: ("GREEN", "GENE")  False
+10. Words are anagrams of substrings: ("GREEN", "GENE") -> False; ("CAP", "PACK") -> False
 
-11. Ignore capitalisation: ("Rome", "More")  True
+11. Ignore capitalisation: ("Rome", "More") -> True
 
-12. Ignore punctuation: ("Carlow", "Coral, W!")  True
+12. Ignore punctuation: ("Carlow?", "Coral, W!") -> True
