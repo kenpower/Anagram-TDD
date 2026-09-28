@@ -69,10 +69,16 @@ jobs:
         $label = "tests"
         $badge_url = "https://img.shields.io/badge/$label-$([System.Uri]::EscapeDataString($message))-$color"
         $badge_md = "![tests]($badge_url)"
-        $readme = 'Anagram-TDD/readme.md'
+        $readme = 'readme.md'
         if (-Not (Test-Path $readme)) {
           Write-Host "README not found at $readme, creating new file"
-          "<!-- TEST_BADGE_START -->`n$badge_md`n<!-- TEST_BADGE_END -->`n`n# TDD Exercise: \"Anagram Detector\"`n" | Out-File -FilePath $readme -Encoding utf8
+          @"
+<!-- TEST_BADGE_START -->
+$badge_md
+<!-- TEST_BADGE_END -->
+
+# TDD Exercise: "Anagram Detector"
+"@ | Out-File -FilePath $readme -Encoding utf8
         } else {
           $text = Get-Content $readme -Raw -Encoding utf8
           if ($text -match '<!-- TEST_BADGE_START -->[\s\S]*?<!-- TEST_BADGE_END -->') {
@@ -80,7 +86,13 @@ jobs:
             $new | Out-File -FilePath $readme -Encoding utf8
           } else {
             # Prepend badge
-            "$([String]::Join([Environment]::NewLine, @('<!-- TEST_BADGE_START -->', $badge_md, '<!-- TEST_BADGE_END -->', '', '')))" + $text | Out-File -FilePath $readme -Encoding utf8
+            $prefix = @"
+<!-- TEST_BADGE_START -->
+$badge_md
+<!-- TEST_BADGE_END -->
+
+"@
+            ($prefix + $text) | Out-File -FilePath $readme -Encoding utf8
           }
         }
         git config user.email "actions@github.com"
