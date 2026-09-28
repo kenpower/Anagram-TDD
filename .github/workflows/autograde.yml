@@ -30,10 +30,10 @@ jobs:
 
     - name: Run tests and collect gtest XML
       run: |
-        if exist "Anagram-TDD/x64/Release/Anagram-TDD.exe" (
-          Anagram-TDD/x64/Release/Anagram-TDD.exe --gtest_output=xml:results.xml
+        if exist "Anagram-TDD\\x64\\Release\\Anagram-TDD.exe" (
+          "Anagram-TDD\\x64\\Release\\Anagram-TDD.exe" --gtest_output=xml:results.xml
         ) else (
-          echo "Executable not found: Anagram-TDD/x64/Release/Anagram-TDD.exe" & dir Anagram-TDD & dir Anagram-TDD/x64 & exit 1
+          echo "Executable not found: Anagram-TDD\\x64\\Release\\Anagram-TDD.exe" & dir Anagram-TDD & dir Anagram-TDD\\x64 & exit 1
         )
       shell: cmd
 
