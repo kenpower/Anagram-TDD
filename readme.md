@@ -1,3 +1,7 @@
+<!-- TEST_BADGE_START -->
+![tests](https://img.shields.io/badge/tests-0%2F0-lightgrey)
+<!-- TEST_BADGE_END -->
+
 ## TDD Exercise: "Anagram Detector"
 
 Task Description
