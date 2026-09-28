@@ -1,13 +1,10 @@
-TDD Exercise: "Anagram Detector"
----------------------------------
+## TDD Exercise: "Anagram Detector"
 
 Task Description
-
 
 Write a function that determines if two words are anagrams of each other.
 
 An anagram is created by rearranging the letters of a word to produce a new word, using all original letters exactly once.
-
 
 - Letters may be provided in uppercase or lowercase. Implementations should
   treat letters case-insensitively (for example, 'a' is equivalent to 'A').
@@ -15,7 +12,6 @@ An anagram is created by rearranging the letters of a word to produce a new word
 - Return True if the two words are anagrams, else False.
 
 Examples:
-
 
 - "LISTEN", "SILENT"  True
 
@@ -28,7 +24,6 @@ Examples:
 - "A", "B"  False
 
 - "" (empty strings)  True
-
 
 =========================================================
 
@@ -53,3 +48,7 @@ Suggested TDD Steps
 9. Same letters, different counts: ("AAB", "ABA")  True; ("AAB", "ABB")  False
 
 10. Words of different lengths: ("GREEN", "GENE")  False
+
+11. Ignore capitalisation: ("Rome", "More")  True
+
+12. Ignore punctuation: ("Carlow", "Coral, W!")  True

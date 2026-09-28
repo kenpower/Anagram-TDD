@@ -1,4 +1,3 @@
-
 // Allowed expectations / guidance:
 // - Implementations should treat letters case-insensitively: uppercase and
 //   lowercase are considered equivalent ("a" == "A").
@@ -9,7 +8,7 @@
 
 #include "pch.h"
 #include <gtest/gtest.h>
-#include "../include/anagram.h"
+#include "include/anagram.h"
 
 TEST(StarterAnagramTests, EmptyBoth) {
 	EXPECT_TRUE(are_anagrams("", ""));
@@ -19,4 +18,3 @@ TEST(StarterAnagramTests, OneEmpty) {
 	EXPECT_FALSE(are_anagrams("", "A"));
 	EXPECT_FALSE(are_anagrams("A", ""));
 }
-
