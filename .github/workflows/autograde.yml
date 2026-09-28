@@ -6,12 +6,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-and-test:
     name: Build (MSBuild) and run tests
     runs-on: windows-latest
-    permissions:
-      contents: write
 
     steps:
     - name: Checkout
@@ -61,60 +62,88 @@ jobs:
         name: test-results
         path: results.xml
 
-    - name: Update README badge (safe Node)
+    - name: Parse test results
+      id: parse
       if: always()
-      continue-on-error: true
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const fs = require('fs');
-          const xmlPath = 'results.xml';
-          let xml = '';
-          if (fs.existsSync(xmlPath)) {
-            xml = fs.readFileSync(xmlPath, 'utf8');
-          }
-          let tests = 0, failures = 0;
-          if (xml) {
-            let m = xml.match(/<testsuites[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
-            if (!m) m = xml.match(/<testsuite[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*>/);
-            if (m) { tests = parseInt(m[1], 10); failures = parseInt(m[2], 10); }
-          } else if (fs.existsSync('test_exit_code.txt')) {
-            // No XML produced; fall back to exit code. If non-zero, mark as 1 failure on 1 test.
-            const rc = parseInt(fs.readFileSync('test_exit_code.txt','utf8').trim() || '0', 10);
-            if (rc !== 0) { tests = 1; failures = 1; } else { tests = 0; failures = 0; }
-          }
-          const passed = tests - failures;
-          const color = (tests === 0) ? 'lightgrey' : (passed === tests) ? 'brightgreen' : (passed > 0) ? 'yellow' : 'red';
-          const message = `${passed}/${tests}`;
-          const badgeUrl = `https://img.shields.io/badge/${encodeURIComponent('tests passed')}-${encodeURIComponent(message)}-${color}`;
-          const badgeMd = `![tests passed](${badgeUrl})`;
-          const readmePath = 'readme.md';
-          let text = '';
-          if (fs.existsSync(readmePath)) text = fs.readFileSync(readmePath, 'utf8');
-          const start = '<!-- TEST_BADGE_START -->';
-          const end = '<!-- TEST_BADGE_END -->';
-          if (text.includes(start) && text.includes(end)) {
-            const replaced = text.replace(new RegExp(`${start}[\s\S]*?${end}`), `${start}\n${badgeMd}\n${end}`);
-            fs.writeFileSync(readmePath, replaced, 'utf8');
-          } else {
-            const header = `${start}\n${badgeMd}\n${end}\n\n`;
-            const initial = text || '# TDD Exercise: "Anagram Detector"\n';
-            fs.writeFileSync(readmePath, header + initial, 'utf8');
-          }
-          // write test status so the workflow can fail after badge update
-          fs.writeFileSync('test_status.txt', String(failures), 'utf8');
-
-    - name: Commit README badge
-      if: always()
-      continue-on-error: true
+      shell: pwsh
       run: |
-        git config user.email "actions@github.com"
-        git config user.name "GitHub Actions"
-        git add readme.md
-        git commit -m "ci: update test badge" || echo "No changes to commit"
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        $xml = ""
+        if (Test-Path results.xml) { $xml = Get-Content results.xml -Raw }
+        $tests = 0; $failures = 0
+        if ($xml) {
+          $m = [regex]::Match($xml, '<testsuites[^>]*tests="(\d+)"[^>]*failures="(\d+)"')
+          if (-not $m.Success) { $m = [regex]::Match($xml, '<testsuite[^>]*tests="(\d+)"[^>]*failures="(\d+)"') }
+          if ($m.Success) { $tests = [int]$m.Groups[1].Value; $failures = [int]$m.Groups[2].Value }
+        }
+        $passed = $tests - $failures
+        if ($tests -eq 0) { $color = 'lightgrey' } elseif ($passed -eq $tests) { $color = 'brightgreen' } elseif ($passed -gt 0) { $color = 'yellow' } else { $color = 'red' }
+        $message = "$passed/$tests"
+        Write-Host "message=$message color=$color"
+        "message=$message" >> $env:GITHUB_OUTPUT
+        "color=$color" >> $env:GITHUB_OUTPUT
+
+    # Badge SVG is generated here, then committed to a separate orphan
+    # 'badges' branch (see next step) - main/master history stays
+    # commit-free. Works automatically in every student fork, no
+    # secrets or per-repo setup needed (uses the fork's own
+    # auto-provided GITHUB_TOKEN).
+    - name: Generate badge SVG
+      if: always()
+      shell: pwsh
+      run: |
+        $label = "tests passed"
+        $message = "${{ steps.parse.outputs.message }}"
+        $color = "${{ steps.parse.outputs.color }}"
+        $colors = @{ brightgreen = "#4c1"; yellow = "#dfb317"; red = "#e05d44"; lightgrey = "#9f9f9f" }
+        $hex = $colors[$color]; if (-not $hex) { $hex = "#9f9f9f" }
+        $labelWidth = 90; $msgWidth = 60
+        $totalWidth = $labelWidth + $msgWidth
+        $svg = @"
+<svg xmlns="http://www.w3.org/2000/svg" width="$totalWidth" height="20">
+  <linearGradient id="b" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+  <rect rx="3" width="$totalWidth" height="20" fill="#555"/>
+  <rect rx="3" x="$labelWidth" width="$msgWidth" height="20" fill="$hex"/>
+  <path fill="$hex" d="M$labelWidth 0h4v20h-4z"/>
+  <rect rx="3" width="$totalWidth" height="20" fill="url(#b)"/>
+  <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+    <text x="$($labelWidth/2)" y="14">$label</text>
+    <text x="$($labelWidth + $msgWidth/2)" y="14">$message</text>
+  </g>
+</svg>
+"@
+        Set-Content -Path badge.svg -Value $svg -NoNewline
+
+    - name: Commit badge to orphan 'badges' branch
+      if: always()
+      shell: bash
+      run: |
+        set -e
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        git fetch origin badges 2>/dev/null || true
+
+        if git show-ref --verify --quiet refs/remotes/origin/badges; then
+          git worktree add badge-worktree badges
+        else
+          git worktree add --detach badge-worktree
+          (cd badge-worktree && git checkout --orphan badges && git rm -rf . >/dev/null 2>&1 || true)
+        fi
+
+        cp badge.svg badge-worktree/badge.svg
+        cd badge-worktree
+        git add badge.svg
+        if git diff --cached --quiet; then
+          echo "Badge unchanged, skipping commit"
+        else
+          git commit -m "Update test badge [skip ci]"
+          git push origin HEAD:badges || echo "Push failed (e.g. PR from fork) - continuing"
+        fi
+        cd ..
+        git worktree remove badge-worktree --force
 
     - name: Fail if tests failed
       if: always()
