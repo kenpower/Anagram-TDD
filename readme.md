@@ -43,7 +43,7 @@ Examples:
 ## Suggested TDD Steps COMMIT AFTER EACH PASSING TEST
 
 1. Red - write ONE failing test
-2 .Green - make it pass
+2. Green - make it pass
 3. Refactor - clean up code (remove duplications, scale it, etc)
 4. COMMIT
 5. Go back to 1
