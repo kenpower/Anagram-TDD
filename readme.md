@@ -26,17 +26,17 @@ An anagram is created by rearranging the letters of a word to produce a new word
 
 Examples:
 
-- "LISTEN", "SILENT"  True
+- "LISTEN", "SILENT" -> True
 
-- "ARMY", "MARY"  True
+- "ARMY", "MARY" -> True
 
-- "HELLO", "WORLD"  False
+- "HELLO", "WORLD" -> False
 
-- "A", "A"  True
+- "A", "A" -> True
 
-- "A", "B"  False
+- "A", "B" -> False
 
-- "" (empty strings)  True
+- "", "" (empty strings) -> True
 
 =========================================================
 
