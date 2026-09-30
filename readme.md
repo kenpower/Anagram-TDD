@@ -40,7 +40,7 @@ Examples:
 
 =========================================================
 
-Suggested TDD Steps
+Suggested TDD Steps COMMIT AFTER EACH PASSING TEST
 
 1. Both inputs empty: ("", "") -> True
 
